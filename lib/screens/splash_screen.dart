@@ -4,9 +4,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert' show json;
 import 'dart:async';
 
-import 'package:flutter_chat_ui/secret/param.dart';
-import 'package:flutter_chat_ui/screens/chat_screen.dart';
-import 'package:flutter_chat_ui/models/message_model.dart';
+import 'package:integram_chat_demo/secret/param.dart';
+import 'package:integram_chat_demo/screens/chat_screen.dart';
+import 'package:integram_chat_demo/models/message_model.dart';
 
 final storage = FlutterSecureStorage();
 
@@ -19,12 +19,17 @@ class SplashScreen extends StatefulWidget {
 
 class SplashScreenState extends State<SplashScreen> {
   String splashMessage = 'Autenticando Usuario...';
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
 
-    var jwtToken = authenticate(CLIENT_TOKEN);
+    _onAuthenticate();
+  }
+
+  void _onAuthenticate() async {
+    var jwtToken = await _authenticate(CLIENT_TOKEN);
 
     // Just for branding
     if (jwtToken != null) {
@@ -33,11 +38,12 @@ class SplashScreenState extends State<SplashScreen> {
     } else {
       setState(() {
         splashMessage = "Error de autenticación...";
+        isLoading = false;
       });
     }
   }
 
-  Future<String> authenticate(String token) async {
+  Future<String> _authenticate(String token) async {
     var res = await http
         .post("$SERVER_IP/auth/comunication-server", body: {"token": token});
 
@@ -75,9 +81,10 @@ class SplashScreenState extends State<SplashScreen> {
             SizedBox(
               height: 20.0,
             ),
-            CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
+            if (isLoading == true)
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
             SizedBox(
               height: 20.0,
             ),

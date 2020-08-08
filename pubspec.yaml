@@ -1,5 +1,5 @@
-name: flutter_chat_ui
-description: A new Flutter project.
+name: integram_chat_demo
+description: Integram Chat Demo.
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -14,7 +14,7 @@ description: A new Flutter project.
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.6.0 <3.0.0"
 
 dependencies:
   flutter:

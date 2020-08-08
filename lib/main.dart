@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_chat_ui/screens/splash_screen.dart';
+import 'package:integram_chat_demo/screens/splash_screen.dart';
 
 void main() => runApp(MyApp());
 
