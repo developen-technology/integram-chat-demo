@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:convert' show json;
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 import 'package:integram_chat_demo/providers/chat_messages.dart';
 import 'package:integram_chat_demo/models/message_model.dart';
 import 'package:integram_chat_demo/widgets/chat_list.dart';
 import 'package:integram_chat_demo/widgets/message_composer.dart';
 import 'package:integram_chat_demo/secret/param.dart';
+import 'package:provider/provider.dart';
 
 import 'dart:developer';
 
@@ -113,11 +114,13 @@ class _StreamChatBuilderState extends State<StreamChatBuilder> {
       if (data != null) {
         var messageData = json.decode(data["data"]);
 
+        final f = new DateFormat('dd-MM-yyyy hh:mm');
+
         //log(data["data"].toString());
         var message = Message(
             sender: 1,
             text: messageData["content"].toString(),
-            time: messageData["time"].toString());
+            time: f.format(DateTime.parse(messageData["time"])));
 
         widget.chatData.addChatMessage(message);
       }

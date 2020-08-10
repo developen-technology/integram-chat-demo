@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert' show json;
 import 'package:provider/provider.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:intl/intl.dart';
 
 import 'package:integram_chat_demo/main.dart';
 import 'package:integram_chat_demo/providers/chat_messages.dart';
@@ -58,17 +59,21 @@ class _MessageComposerState extends State<MessageComposer> {
     final chatData = Provider.of<ChatMessages>(context, listen: false);
     if (_msgcontroller.text.isEmpty) return;
 
-    var message = Message(sender: -1, text: _msgcontroller.text, time: "ayer");
+    final f = new DateFormat('dd-MM-yyyy hh:mm');
+    var message = Message(
+        sender: -1, text: _msgcontroller.text, time: f.format(DateTime.now()));
 
     if (jwtToken == null) {
       jwtToken = await storage.read(key: "jwtToken");
     }
 
+    final apiFormat = DateFormat('yyyy-MM-dd hh:mm:ss');
+
     var data = json.encode({
       'action': "echoTest",
       'payload': {
         'id': 1,
-        'time': DateTime.now().toString(),
+        'time': apiFormat.format(DateTime.now()),
         'content': _msgcontroller.text,
         'is_seen': false,
         'is_sent': true,
