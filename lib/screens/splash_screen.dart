@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' show json;
 import 'dart:async';
 
+import 'package:integram_chat_demo/main.dart';
 import 'package:integram_chat_demo/secret/param.dart';
 import 'package:integram_chat_demo/screens/chat_screen.dart';
-import 'package:integram_chat_demo/models/message_model.dart';
-
-final storage = FlutterSecureStorage();
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -45,7 +42,7 @@ class SplashScreenState extends State<SplashScreen> {
 
   Future<String> _authenticate(String token) async {
     var res = await http
-        .post("$SERVER_IP/auth/comunication-server", body: {"token": token});
+        .post("$API_SERVER/auth/comunication-server", body: {"token": token});
 
     if (res.statusCode == 200) {
       var data = json.decode(res.body);
@@ -60,7 +57,7 @@ class SplashScreenState extends State<SplashScreen> {
 
   onDoneLoading() async {
     Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => ChatScreen(user: greg)));
+        .push(MaterialPageRoute(builder: (context) => ChatScreen()));
   }
 
   @override
