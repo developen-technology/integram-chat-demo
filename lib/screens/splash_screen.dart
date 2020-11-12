@@ -26,11 +26,11 @@ class SplashScreenState extends State<SplashScreen> {
   }
 
   void _onAuthenticate() async {
-    var jwtToken = await _authenticate(CLIENT_TOKEN);
+    var session = await _authenticate(CLIENT_ID);
 
     // Just for branding
-    if (jwtToken != null) {
-      storage.write(key: "jwtToken", value: jwtToken.toString());
+    if (session != null) {
+      storage.write(key: "session", value: session.toString());
       new Timer(Duration(seconds: 5), onDoneLoading);
     } else {
       setState(() {
@@ -40,15 +40,15 @@ class SplashScreenState extends State<SplashScreen> {
     }
   }
 
-  Future<String> _authenticate(String token) async {
-    var res = await http
-        .post("$API_SERVER/auth/comunication-server", body: {"token": token});
+  Future<String> _authenticate(String clientId) async {
+    var res = await http.post("$API_SERVER/conversation/greeting-mobile",
+        body: {"client_id": clientId});
 
     if (res.statusCode == 200) {
       var data = json.decode(res.body);
 
       if (data["success"]) {
-        return data["token"];
+        return data["data"];
       }
     }
 

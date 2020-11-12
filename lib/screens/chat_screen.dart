@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:convert' show json;
-import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:http/http.dart' as http;
+import 'package:pusher_websocket_flutter/pusher.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import 'package:integram_chat_demo/main.dart';
 import 'package:integram_chat_demo/providers/chat_messages.dart';
 import 'package:integram_chat_demo/models/message_model.dart';
 import 'package:integram_chat_demo/widgets/chat_list.dart';
@@ -10,16 +13,17 @@ import 'package:integram_chat_demo/widgets/message_composer.dart';
 import 'package:integram_chat_demo/secret/param.dart';
 import 'package:provider/provider.dart';
 
-import 'dart:developer';
-
 class ChatScreen extends StatefulWidget {
-  final WebSocketChannel channel = WebSocketChannel.connect(Uri.parse(WS_URL));
-
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -29,17 +33,58 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
-class InitScaffold extends StatelessWidget {
-  InitScaffold({
-    Key key,
-    @required this.widget,
-  }) : super(key: key);
-
+class InitScaffold extends StatefulWidget {
   final ChatScreen widget;
+  Channel channel;
+
+  InitScaffold({Key key, @required this.widget}) : super(key: key);
+
+  @override
+  _InitScaffoldState createState() => _InitScaffoldState();
+}
+
+class _InitScaffoldState extends State<InitScaffold> {
+  ChatMessages chatData;
+
+  @override
+  void initState() {
+    super.initState();
+    initPusher();
+  }
+
+  void initPusher() async {
+    try {
+      await Pusher.init(APP_KEY, PusherOptions(cluster: "us2"));
+      await Pusher.connect();
+      String session = await storage.read(key: "session");
+      widget.channel = await Pusher.subscribe(session);
+
+      await widget.channel.bind('message-in', (event) {
+        var data = json.decode(event.data);
+
+        if (data != null) {
+          var messageData = json.decode(data["message"]);
+          final f = new DateFormat('dd-MM-yyyy hh:mm');
+
+          var message = Message(
+              sender: 1,
+              text: messageData["content"].toString(),
+              time: f.format(DateTime.parse(messageData["time"])));
+
+          chatData.addChatMessage(message);
+        }
+      });
+
+      http.post("$API_SERVER/conversation/message-in",
+          body: {"content": "/start", "session": session});
+    } on PlatformException catch (e) {
+      print(e.message);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final ChatMessages chatData = Provider.of<ChatMessages>(context);
+    chatData = Provider.of<ChatMessages>(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
@@ -79,56 +124,14 @@ class InitScaffold extends StatelessWidget {
                     topLeft: Radius.circular(30.0),
                     topRight: Radius.circular(30.0),
                   ),
-                  child: StreamChatBuilder(widget.channel, widget, chatData),
+                  child: ChatList(),
                 ),
               ),
             ),
-            MessageComposer(widget.channel),
+            MessageComposer(),
           ],
         ),
       ),
     );
-  }
-}
-
-class StreamChatBuilder extends StatefulWidget {
-  WebSocketChannel channel;
-  ChatMessages chatData;
-  ChatScreen widget;
-
-  StreamChatBuilder(this.channel, this.widget, this.chatData);
-
-  @override
-  _StreamChatBuilderState createState() => _StreamChatBuilderState();
-}
-
-class _StreamChatBuilderState extends State<StreamChatBuilder> {
-  @override
-  void initState() {
-    super.initState();
-
-    widget.channel.stream.asBroadcastStream().listen((event) {
-      var data = json.decode(event);
-      log(data.toString());
-
-      if (data != null) {
-        var messageData = json.decode(data["data"]);
-
-        final f = new DateFormat('dd-MM-yyyy hh:mm');
-
-        //log(data["data"].toString());
-        var message = Message(
-            sender: 1,
-            text: messageData["content"].toString(),
-            time: f.format(DateTime.parse(messageData["time"])));
-
-        widget.chatData.addChatMessage(message);
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ChatList();
   }
 }
